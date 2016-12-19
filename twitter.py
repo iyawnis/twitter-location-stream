@@ -6,6 +6,7 @@ from datetime import datetime
 from model import Tweet
 from auth import auth_handler
 from traceback import print_exc
+from database import db_session
 import json
 
 errors = { "304": "There was no new data to return.",
@@ -27,7 +28,6 @@ class StdOutListener(StreamListener):
 
     def on_data(self, data):
         try:
-            #print data #prints json data
             info = json.loads(data)
 
             coordinates = info.get('coordinates', {}).get('coordinates', None) if info.get('coordinates') else None
@@ -40,9 +40,9 @@ class StdOutListener(StreamListener):
                       last_update=datetime.now(),
                       place=place)
             tw.save()
-            print(tw) #prints tweet ID
         except:
            print_exc()
+           db_session.rollback()
         return True
 
     def on_error(self, status_code):
