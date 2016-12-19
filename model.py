@@ -16,8 +16,8 @@ class Tweet(Base):
 
     @classmethod
     def batch_to_update(cls):
-        update_interval = datetime.now() - timedelta(minutes=10)
-        # Get the last 100 tweets that have not been updated within the interval, starting from oldest
+        update_interval = datetime.now() - timedelta(hours=12)
+        # Get the last 100 tweets that were updated more than *12 hours* ago, starting from oldest
         return (Tweet.query
             .filter(Tweet.last_update <= update_interval)
             .order_by(Tweet.last_update.asc())

@@ -9,7 +9,8 @@ from traceback import print_exc
 from database import db_session
 import json
 
-errors = { "304": "There was no new data to return.",
+errors = {
+"304": "There was no new data to return.",
 "400": "The request was invalid or cannot be otherwise served",
 "401": "Missing or incorrect authentication credentials",
 "403": "The request is understood, but it has been refused or access is not allowed",
@@ -32,6 +33,9 @@ class StdOutListener(StreamListener):
 
             coordinates = info.get('coordinates', {}).get('coordinates', None) if info.get('coordinates') else None
             place = info.get('place').get('full_name') if info.get('place') else None
+            if coordinates is None:
+              # If we don't have coordinates we dont care about this tweet
+              return True
             tw = Tweet(id=info.get('id'),
                       tweet_text=info.get('text'),
                       user_id=info.get('user').get('id'),

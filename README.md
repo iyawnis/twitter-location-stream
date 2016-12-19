@@ -1,17 +1,29 @@
 
-virtualenv -ppython3 env
+Optional:
+    $ > virtualenv -ppython3 env
 
-source ./env/bin/activate
+    $ > source ./env/bin/activate
 
-pip install -r requirements.txt
+To install the python requirements:
+
+$ > pip install -r requirements.txt
 
 To create database:
 
-python -c'import database; database.init_db()'
+$ > python -c'import database; database.init_db()'
 
 
-CHANGE_LIST
+To begin fetching tweets:
 
-Tweets without coordinates / place will still be stored
+$ > python twitter.py
 
+To begin updating tweet counts:
+
+$ > python tweet_count_update.py
+
+
+To check number of tweets stored:
+
+$ > psql -d tweetsql
+$ >     select count(*) from tweet;
 

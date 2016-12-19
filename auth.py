@@ -1,7 +1,8 @@
 from tweepy import OAuthHandler
 
 
-#Variables that contains the user credentials to access Twitter API 
+#Variables that contains the user credentials to access Twitter API
+# DO NOT SHARE
 consumer_key = "oM3MZdZBg7M6KO0UWKyFFsqSx"
 consumer_secret = "bnAC76XUIhPbMInmT9cAtieXmVzs4DIj2F0yvGpBenzaVLFaah"
 access_token = "802493452218986496-5UBID2TqvSKnaw1FQP97Ua6ZzgQcGBx"
