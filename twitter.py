@@ -32,7 +32,7 @@ class StdOutListener(StreamListener):
             info = json.loads(data)
 
             coordinates = info.get('coordinates', {}).get('coordinates', None) if info.get('coordinates') else None
-            place = info.get('place').get('full_name') if info.get('place') else None
+            place = info.get('place').get('full_name') if info.get('place') else ''
             if coordinates is None:
               # If we don't have coordinates we dont care about this tweet
               return True
