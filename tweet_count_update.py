@@ -1,8 +1,12 @@
-from model import Tweet
+#!/usr/bin/env python
 import tweepy
-from auth import auth_handler
 import json
 import time
+import fcntl
+import sys
+import errno
+from auth import auth_handler
+from model import Tweet
 
 """
 Go through tweets, in batches of 100 and update their favourite and retweet counts
@@ -38,9 +42,17 @@ def update_tweet_counts():
         tweets_to_update = batch_ids()
     end_time = time.time()
     print('')
-    print('updated={} failed_update={} time_elapsed={:.2f}'.format(total_updates, total_failed, (end_time - start_time)))
+    print('[{}] updated={} failed_update={} time_elapsed={:.2f}'.format(time.strftime('%c'), total_updates, total_failed, (end_time - start_time)))
 
 
 if __name__ == '__main__':
-    print('Begin tweet counts update...')
+    f = open ('lock', 'w')
+    try:
+        fcntl.lockf (f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except IOError as e:
+        if e.errno == errno.EAGAIN:
+            sys.stderr.write('[{}] Script tweet_count_update already running.\n'.format(time.strftime('%c')))
+            sys.exit(-1)
+        raise
+    print('[{}] Start tweet_count_update'.format(time.strftime('%c')))
     update_tweet_counts()

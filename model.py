@@ -1,10 +1,10 @@
-from sqlalchemy import Column, Integer, String, Table, Text, DateTime
+from sqlalchemy import Column, BigInteger, Integer, String, Table, Text, DateTime
 from database import Base, db_session
 from datetime import datetime, timedelta
 
 class Tweet(Base):
     __tablename__ = 'tweet'
-    id = Column(Integer, primary_key=True)
+    id = Column(BigInteger, primary_key=True)
     tweet_text = Column(String(300), nullable=False)
     user_id = Column(String(50), nullable=False)
     coordinates = Column(String(100), nullable=True)
