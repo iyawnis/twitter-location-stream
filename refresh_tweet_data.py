@@ -15,6 +15,14 @@ Go through tweets, in batches of 100 and update the stored data
 def batch_ids():
     return [tweet.id for tweet in Tweet.batch_to_update()]
 
+def refresh_tweet_replies():
+    for tweet in Tweet.all_with_json():
+        if tweet.json is None:
+            continue
+        reply_to = tweet.json.get('in_reply_to_status_id')
+        if reply_to is not None:
+            Tweet.increment_replies(reply_to)
+
 
 def refresh_tweet_data():
     tweets_to_update = batch_ids()
@@ -54,5 +62,10 @@ if __name__ == '__main__':
             sys.stderr.write('[{}] Script refresh_tweet_data already running.\n'.format(time.strftime('%c')))
             sys.exit(-1)
         raise
-    print('[{}] Start refresh_tweet_data'.format(time.strftime('%c')))
-    refresh_tweet_data()
+    arguments = sys.argv
+    if 'local' in arguments:
+        print('[{}] Start refresh_tweet_replies'.format(time.strftime('%c')))
+        refresh_tweet_replies()
+    else:
+        print('[{}] Start refresh_tweet_data'.format(time.strftime('%c')))
+        refresh_tweet_data()

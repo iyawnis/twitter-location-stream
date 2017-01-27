@@ -12,7 +12,7 @@ class Tweet(Base):
     place = Column(String(100), nullable=False)
     retweet_count = Column(Integer, nullable=True)
     favorite_count = Column(Integer, nullable=True)
-    reply_count = Column(Integer, nullable=True)
+    reply_count = Column(Integer, nullable=False, default=0)
     last_update = Column(DateTime, nullable=True, index=True)
     json = Column(JSON, nullable=True)
 
@@ -32,7 +32,13 @@ class Tweet(Base):
             'last_update': datetime.now(),
             'json': tweet._json,
             'retweet_count': tweet.retweet_count})
-        db_session.commit()
+
+    @classmethod
+    def increment_replies(cls, tweet_id):
+        (db_session
+           .query(Tweet)
+           .filter(Tweet.id == tweet_id)
+           .update({'reply_count': Tweet.reply_count + 1}))
 
     @classmethod
     def update_counts(cls, tweet_id, favorite_count, retweet_count):
@@ -40,18 +46,18 @@ class Tweet(Base):
             'favorite_count': favorite_count,
             'last_update': datetime.now(),
             'retweet_count': retweet_count})
-        db_session.commit()
 
     @classmethod
     def bump_last_update(cls, tweet_id):
         db_session.query(Tweet).filter(Tweet.id == tweet_id).update({
             'last_update': datetime.now()})
-        db_session.commit()
 
+    @classmethod
+    def all_with_json(cls):
+        return Tweet.query.filter(Tweet.json != None)
 
     def save(self):
         db_session.add(self)
-        db_session.commit()
 
     def __repr__(self):
         return '<Tweet {0}>'.format(self.id)
