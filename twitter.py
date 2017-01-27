@@ -29,21 +29,22 @@ class StdOutListener(StreamListener):
 
     def on_data(self, data):
         try:
-            info = json.loads(data)
+            tweet_json = json.loads(data)
 
-            coordinates = info.get('coordinates', {}).get('coordinates', None) if info.get('coordinates') else None
-            place = info.get('place').get('full_name') if info.get('place') else ''
+            coordinates = tweet_json.get('coordinates', {}).get('coordinates', None) if tweet_json.get('coordinates') else None
+            place = tweet_json.get('place').get('full_name') if tweet_json.get('place') else ''
             if coordinates is None:
               # If we don't have coordinates we dont care about this tweet
               return True
-            tw = Tweet(id=info.get('id'),
-                      tweet_text=info.get('text'),
-                      user_id=info.get('user').get('id'),
-                      coordinates=coordinates,
-              		    created_at=info.get('created_at'),
-                      last_update=datetime.now(),
-                      place=place)
-            tw.save()
+            Tweet(
+              id=tweet_json.get('id'),
+              tweet_text=tweet_json.get('text'),
+              user_id=tweet_json.get('user').get('id'),
+              coordinates=coordinates,
+              created_at=tweet_json.get('created_at'),
+              json=tweet_json,
+              last_update=datetime.now(),
+              place=place).save()
         except:
            print_exc()
            db_session.rollback()

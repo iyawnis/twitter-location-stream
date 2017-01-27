@@ -9,14 +9,14 @@ from auth import auth_handler
 from model import Tweet
 
 """
-Go through tweets, in batches of 100 and update their favourite and retweet counts
+Go through tweets, in batches of 100 and update the stored data
 """
 
 def batch_ids():
     return [tweet.id for tweet in Tweet.batch_to_update()]
 
 
-def update_tweet_counts():
+def refresh_tweet_data():
     tweets_to_update = batch_ids()
     api = tweepy.API(auth_handler)
     total_updates = 0
@@ -30,7 +30,7 @@ def update_tweet_counts():
         response = api.statuses_lookup(tweets_to_update, False, False)
         updated_tweets = set()
         for tweet in response:
-            Tweet.update_counts(tweet.id, tweet.favorite_count, tweet.retweet_count)
+            Tweet.update_data(tweet.id, tweet)
             updated_tweets.add(tweet.id)
             total_updates += 1
         failed_update = set(tweets_to_update) - updated_tweets
@@ -51,8 +51,8 @@ if __name__ == '__main__':
         fcntl.lockf (f, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except IOError as e:
         if e.errno == errno.EAGAIN:
-            sys.stderr.write('[{}] Script tweet_count_update already running.\n'.format(time.strftime('%c')))
+            sys.stderr.write('[{}] Script refresh_tweet_data already running.\n'.format(time.strftime('%c')))
             sys.exit(-1)
         raise
-    print('[{}] Start tweet_count_update'.format(time.strftime('%c')))
-    update_tweet_counts()
+    print('[{}] Start refresh_tweet_data'.format(time.strftime('%c')))
+    refresh_tweet_data()

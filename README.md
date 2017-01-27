@@ -13,6 +13,17 @@ To create database:
 $ > python -c'import database; database.init_db()'
 
 
+To upgrade database to latest schema:
+
+ First run test to diagnose any potential problems:
+
+ $ > python manage.py test
+
+ If successful:
+
+ $ > python manage.py upgrade
+
+
 To begin fetching tweets:
 
 $ > python twitter.py

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, BigInteger, Integer, String, Table, Text, DateTime
+from sqlalchemy import Column, BigInteger, JSON, Integer, String, Table, Text, DateTime
 from database import Base, db_session
 from datetime import datetime, timedelta
 
@@ -12,7 +12,9 @@ class Tweet(Base):
     place = Column(String(100), nullable=False)
     retweet_count = Column(Integer, nullable=True)
     favorite_count = Column(Integer, nullable=True)
+    reply_count = Column(Integer, nullable=True)
     last_update = Column(DateTime, nullable=True, index=True)
+    json = Column(JSON, nullable=True)
 
     @classmethod
     def batch_to_update(cls):
@@ -22,6 +24,15 @@ class Tweet(Base):
             .filter(Tweet.last_update <= update_interval)
             .order_by(Tweet.last_update.asc())
             .limit(100))
+
+    @classmethod
+    def update_data(cls, tweet_id, tweet):
+        db_session.query(Tweet).filter(Tweet.id == tweet_id).update({
+            'favorite_count': tweet.favorite_count,
+            'last_update': datetime.now(),
+            'json': tweet._json,
+            'retweet_count': tweet.retweet_count})
+        db_session.commit()
 
     @classmethod
     def update_counts(cls, tweet_id, favorite_count, retweet_count):
