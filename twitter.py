@@ -36,7 +36,8 @@ class StdOutListener(StreamListener):
             if coordinates is None:
               # If we don't have coordinates we dont care about this tweet
               return True
-            Tweet(
+            print('Tweet')
+            tweet = Tweet(
               id=tweet_json.get('id'),
               tweet_text=tweet_json.get('text'),
               user_id=tweet_json.get('user').get('id'),
@@ -44,7 +45,8 @@ class StdOutListener(StreamListener):
               created_at=tweet_json.get('created_at'),
               json=tweet_json,
               last_update=datetime.now(),
-              place=place).save()
+              place=place)
+            tweet.save()
         except:
            print_exc()
            db_session.rollback()

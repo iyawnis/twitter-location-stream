@@ -1,5 +1,5 @@
 from sqlalchemy import Column, BigInteger, JSON, Integer, String, Table, Text, DateTime
-from database import Base, db_session
+from database import Base, db_session, update_session
 from datetime import datetime, timedelta
 
 class Tweet(Base):
@@ -32,10 +32,11 @@ class Tweet(Base):
             'last_update': datetime.now(),
             'json': tweet._json,
             'retweet_count': tweet.retweet_count})
+        db_session.commit()
 
     @classmethod
     def increment_replies(cls, tweet_id):
-        (db_session
+        (update_session
            .query(Tweet)
            .filter(Tweet.id == tweet_id)
            .update({'reply_count': Tweet.reply_count + 1}))
@@ -46,11 +47,13 @@ class Tweet(Base):
             'favorite_count': favorite_count,
             'last_update': datetime.now(),
             'retweet_count': retweet_count})
+        db_session.commit()
 
     @classmethod
     def bump_last_update(cls, tweet_id):
         db_session.query(Tweet).filter(Tweet.id == tweet_id).update({
             'last_update': datetime.now()})
+        db_session.commit()
 
     @classmethod
     def all_with_json(cls):
@@ -58,6 +61,7 @@ class Tweet(Base):
 
     def save(self):
         db_session.add(self)
+        db_session.commit()
 
     def __repr__(self):
         return '<Tweet {0}>'.format(self.id)

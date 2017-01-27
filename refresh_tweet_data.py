@@ -21,6 +21,7 @@ def refresh_tweet_replies():
             continue
         reply_to = tweet.json.get('in_reply_to_status_id')
         if reply_to is not None:
+            print(reply_to, flush=True)
             Tweet.increment_replies(reply_to)
 
 
