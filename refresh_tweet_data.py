@@ -27,7 +27,7 @@ def refresh_tweet_replies():
 
 def refresh_tweet_data():
     tweets_to_update = batch_ids()
-    api = tweepy.API(auth_handler)
+    api = tweepy.API(auth_handler, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
     total_updates = 0
     total_failed = 0
     start_time = time.time()
@@ -63,8 +63,8 @@ if __name__ == '__main__':
             sys.stderr.write('[{}] Script refresh_tweet_data already running.\n'.format(time.strftime('%c')))
             sys.exit(-1)
         raise
-    arguments = sys.argv
-    if 'local' in arguments:
+
+    if 'local' in sys.argv:
         print('[{}] Start refresh_tweet_replies'.format(time.strftime('%c')))
         refresh_tweet_replies()
     else:

@@ -6,7 +6,7 @@ class Tweet(Base):
     __tablename__ = 'tweet'
     id = Column(BigInteger, primary_key=True)
     tweet_text = Column(String(300), nullable=False)
-    user_id = Column(String(50), nullable=False)
+    user_id = Column(String(50), nullable=False, index=True)
     coordinates = Column(String(100), nullable=True)
     created_at = Column(String(100), nullable=False)
     place = Column(String(100), nullable=False)
@@ -24,6 +24,10 @@ class Tweet(Base):
             .filter(Tweet.last_update <= update_interval)
             .order_by(Tweet.last_update.asc())
             .limit(100))
+
+    @classmethod
+    def fetch_distinct_users(cls):
+        return (Tweet.query.distinct(Tweet.user_id))
 
     @classmethod
     def update_data(cls, tweet_id, tweet):
@@ -65,3 +69,39 @@ class Tweet(Base):
 
     def __repr__(self):
         return '<Tweet {0}>'.format(self.id)
+
+class User(Base):
+    __tablename__ = 'users'
+    id = Column(BigInteger, primary_key=True)
+    followers = Column(JSON, nullable=True)
+    follower_count = Column(Integer, nullable=False, default=0)
+
+    @classmethod
+    def update_followers(cls, user_id, follower_ids):
+        update_session.query(User).filter(User.id == user_id).update({
+            'followers': list(follower_ids),
+            'follower_count': len(follower_ids)
+        })
+
+    @classmethod
+    def batch_create(cls, user_ids):
+        update_session.bulk_save_objects([
+            User(id=user_id)
+            for user_id in user_ids
+        ])
+
+    @classmethod
+    def fetch_users(cls):
+        return User.query.all()
+
+    @classmethod
+    def get_or_create(cls, user_id):
+        instance = User.query.get(user_id)
+        if instance is None:
+            instance = User(id=user_id)
+            db_session.add(instance)
+            db_session.commit()
+        return instance
+
+    def __repr__(self):
+        return '<User {0}>'.format(self.id)
