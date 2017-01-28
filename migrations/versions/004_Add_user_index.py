@@ -9,5 +9,5 @@ def upgrade(migrate_engine):
 
 def downgrade(migrate_engine):
     tweet = Table('tweet', meta, autoload=True)
-    user_id_idx = Index('user_idx', tweet.c.tag)
+    user_id_idx = Index('user_idx', tweet.c.user_id)
     user_id_idx.drop(migrate_engine)

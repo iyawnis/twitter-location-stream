@@ -75,12 +75,14 @@ class User(Base):
     id = Column(BigInteger, primary_key=True)
     followers = Column(JSON, nullable=True)
     follower_count = Column(Integer, nullable=False, default=0)
+    last_update = Column(DateTime, nullable=True, index=True)
 
     @classmethod
     def update_followers(cls, user_id, follower_ids):
         update_session.query(User).filter(User.id == user_id).update({
             'followers': list(follower_ids),
-            'follower_count': len(follower_ids)
+            'follower_count': len(follower_ids),
+            'last_update':datetime.now()
         })
 
     @classmethod
@@ -92,7 +94,7 @@ class User(Base):
 
     @classmethod
     def fetch_users(cls):
-        return User.query.all()
+        return User.query.order_by(User.last_update.asc()).all()
 
     @classmethod
     def get_or_create(cls, user_id):

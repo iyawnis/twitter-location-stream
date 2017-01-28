@@ -31,9 +31,8 @@ def refresh_user_followers(create_new=False):
                 print('Found {} followers'.format(len(page)))
                 followers_ids.extend(page)
             users_in_system = existing_ids & set(followers_ids)
-            if users_in_system:
-                User.update_followers(user.id, users_in_system)
-                print('Updated followers for ', user.id, users_in_system)
+            User.update_followers(user.id, users_in_system)
+            print('Updated followers for ', user.id, users_in_system)
         except tweepy.error.TweepError:
             print('Could not retrieve followers for {}'.format(user))
             continue
