@@ -1,5 +1,5 @@
 
-Optional:
+Optional (recommended):
     $ > virtualenv -ppython3 env
 
     $ > source ./env/bin/activate
@@ -15,13 +15,7 @@ $ > python -c'import database; database.init_db()'
 
 To upgrade database to latest schema:
 
- First run test to diagnose any potential problems:
-
- $ > python manage.py test
-
- If successful:
-
- $ > python manage.py upgrade
+$ > alembic upgrade head
 
 
 To begin fetching tweets:
@@ -30,8 +24,14 @@ $ > python twitter.py
 
 To begin updating tweet counts:
 
-$ > python tweet_count_update.py
+$ > python refresh_tweet_data.py
 
+    refresh_tweet_data takes the optional local parameter. If provided, it will only  work locally to update the reply counts of tweets.
+
+To update user follower counts:
+
+    refresh_user_followers.py
+    Provide the optional 'create' paramater, to try and create new users based on tweet entries.
 
 To check number of tweets stored:
 
