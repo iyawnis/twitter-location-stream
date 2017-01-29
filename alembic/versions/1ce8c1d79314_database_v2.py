@@ -21,7 +21,7 @@ def upgrade():
     op.create_table(
         'users',
         sa.Column('id', sa.String, primary_key=True),
-        sa.Column('followers', sa.JSON),
+        sa.Column('followers', sa.JSON, nullable=True),
         sa.Column('follower_count', sa.Integer, server_default='0'),
         sa.Column('last_update', sa.DateTime, nullable=True),
     )

@@ -27,10 +27,13 @@ class Tweet(Base):
 
     @classmethod
     def fetch_distinct_users(cls):
-        return (Tweet.query.distinct(Tweet.user_id))
+        return Tweet.query.distinct(Tweet.user_id)
 
     @classmethod
     def update_data(cls, tweet_id, tweet):
+        """
+        Store the latest Tweet data as returned from the API
+        """
         db_session.query(Tweet).filter(Tweet.id == tweet_id).update({
             'favorite_count': tweet.favorite_count,
             'last_update': datetime.now(),
@@ -40,27 +43,28 @@ class Tweet(Base):
 
     @classmethod
     def increment_replies(cls, tweet_id):
+        """
+        Increment the reply_count of the database Tweet matching tweet_id
+        """
         (update_session
            .query(Tweet)
            .filter(Tweet.id == tweet_id)
            .update({'reply_count': Tweet.reply_count + 1}))
 
     @classmethod
-    def update_counts(cls, tweet_id, favorite_count, retweet_count):
-        db_session.query(Tweet).filter(Tweet.id == tweet_id).update({
-            'favorite_count': favorite_count,
-            'last_update': datetime.now(),
-            'retweet_count': retweet_count})
-        db_session.commit()
-
-    @classmethod
     def bump_last_update(cls, tweet_id):
+        """
+        Mark a tweet as having been refreshed now
+        """
         db_session.query(Tweet).filter(Tweet.id == tweet_id).update({
             'last_update': datetime.now()})
         db_session.commit()
 
     @classmethod
     def all_with_json(cls):
+        """
+        Retrieve all Tweets that have a value for their json field
+        """
         return Tweet.query.filter(Tweet.json != None)
 
     def save(self):
@@ -73,20 +77,27 @@ class Tweet(Base):
 class User(Base):
     __tablename__ = 'users'
     id = Column(BigInteger, primary_key=True)
-    followers = Column(JSON, nullable=True)
+    json = Column(JSON, nullable=True)
     follower_count = Column(Integer, nullable=False, default=0)
     last_update = Column(DateTime, nullable=True, index=True)
 
     @classmethod
-    def update_followers(cls, user_id, follower_ids):
-        update_session.query(User).filter(User.id == user_id).update({
-            'followers': list(follower_ids),
-            'follower_count': len(follower_ids),
+    def update_data(cls, user_id, user_json):
+        """
+        Update the follower count for a user, and also the last_updated field
+        """
+        update_session.query(User).filter(User.id == str(user_id)).update({
+            'json': user_json._json,
+            'follower_count': user_json.followers_count,
             'last_update':datetime.now()
         })
 
     @classmethod
     def batch_create(cls, user_ids):
+        """
+        Batch create new user objects, from a list of user_ids
+        This offers better performance compaired to individual create
+        """
         update_session.bulk_save_objects([
             User(id=user_id)
             for user_id in user_ids
@@ -94,16 +105,10 @@ class User(Base):
 
     @classmethod
     def fetch_users(cls):
+        """
+        Fetch all the users, ordered by the oldest updated first
+        """
         return User.query.order_by(User.last_update.asc()).all()
-
-    @classmethod
-    def get_or_create(cls, user_id):
-        instance = User.query.get(user_id)
-        if instance is None:
-            instance = User(id=user_id)
-            db_session.add(instance)
-            db_session.commit()
-        return instance
 
     def __repr__(self):
         return '<User {0}>'.format(self.id)

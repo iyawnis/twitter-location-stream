@@ -8,6 +8,7 @@ from auth import auth_handler
 from traceback import print_exc
 from database import db_session
 import json
+import time
 
 errors = {
 "304": "There was no new data to return.",
@@ -28,6 +29,9 @@ errors = {
 class StdOutListener(StreamListener):
 
     def on_data(self, data):
+        """
+        Called by StreamListener whenever a new tweet arrives
+        """
         try:
             tweet_json = json.loads(data)
 
@@ -36,7 +40,6 @@ class StdOutListener(StreamListener):
             if coordinates is None:
               # If we don't have coordinates we dont care about this tweet
               return True
-            print('Tweet')
             tweet = Tweet(
               id=tweet_json.get('id'),
               tweet_text=tweet_json.get('text'),
@@ -64,6 +67,7 @@ if __name__ == '__main__':
     #This handles Twitter authetification and the connection to Twitter Streaming API
     l = StdOutListener()
     stream = Stream(auth_handler, l)
+    print('[{}] Start location stream API listener'.format(time.strftime('%c')))
 
     #This line filter Twitter Streams to capture data from london and new york
     stream.filter(locations = [-74.25888888888889,40.4772222,-73.7,40.9175,-0.35138888888888886,51.3847222,0.14805555555555555,51.6722222,-77.119759,38.7916449,-76.909393,38.995548,-118.6681759,33.7036519,-118.1552891,34.3373061])
