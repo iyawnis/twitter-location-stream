@@ -1,4 +1,4 @@
-from sqlalchemy import Column, BigInteger, JSON, Integer, String, Table, Text, DateTime
+from sqlalchemy import func,Column, BigInteger, JSON, Integer, String, Table, Text, DateTime
 from database import Base, db_session, update_session
 from datetime import datetime, timedelta
 
@@ -28,6 +28,17 @@ class Tweet(Base):
     @classmethod
     def fetch_distinct_users(cls):
         return Tweet.query.distinct(Tweet.user_id)
+
+    @classmethod
+    def get_user_tweet_counts(cls, user_id):
+        return (db_session
+            .query(
+                func.sum(Tweet.favorite_count).label('favorite_count'),
+                func.sum(Tweet.retweet_count).label('retweet_count'),
+                func.sum(Tweet.reply_count).label('reply_count'),
+                func.count(Tweet.id).label('tweet_count'))
+            .filter(Tweet.user_id == user_id)
+            .group_by(Tweet.user_id).first())
 
     @classmethod
     def update_data(cls, tweet_id, tweet):
@@ -78,8 +89,13 @@ class User(Base):
     __tablename__ = 'users'
     id = Column(BigInteger, primary_key=True)
     json = Column(JSON, nullable=True)
+    follower_ids = Column(JSON, nullable=True)
     follower_count = Column(Integer, nullable=False, default=0)
     last_update = Column(DateTime, nullable=True, index=True)
+    total_tweet_favourites = Column(Integer, nullable=False, default=0)
+    tweet_count = Column(Integer, nullable=False, default=0)
+    total_tweet_retweets = Column(Integer, nullable=False, default=0)
+    total_tweet_replies = Column(Integer, nullable=False, default=0)
 
     @classmethod
     def update_data(cls, user_id, user_json):
@@ -102,6 +118,31 @@ class User(Base):
             User(id=user_id)
             for user_id in user_ids
         ])
+
+    @classmethod
+    def update_followers(cls, user_id, follower_ids):
+        """
+        Update the followers for the specified user
+        """
+        (update_session.query(User)
+            .filter(User.id == user_id).update({
+                'follower_ids': list(follower_ids),
+                'follower_count': len(follower_ids)
+            }))
+
+    @classmethod
+    def get_highest_counter_users(cls):
+        """
+        Get the top users, based on their tweets favourite and retweet counts
+        """
+        return (User.query
+            .order_by(User.total_tweet_favourites.desc(),
+                User.total_tweet_retweets.desc())
+            )
+
+    @classmethod
+    def save(cls):
+        db_session.commit()
 
     @classmethod
     def fetch_users(cls):

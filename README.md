@@ -17,6 +17,10 @@ To upgrade database to latest schema:
 
 $ > alembic upgrade head
 
+To create a new database migration:
+
+$ > alembic revision -m "Revision description"
+
 
 To begin fetching tweets:
 
@@ -30,7 +34,7 @@ $ > python refresh_tweet_data.py
 
 To update user follower counts:
 
-    refresh_user_followers.py
+    refresh_user_data.py
     Provide the optional 'create' paramater, to try and create new users based on tweet entries.
 
 To check number of tweets stored:

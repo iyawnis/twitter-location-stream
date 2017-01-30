@@ -24,7 +24,41 @@ def chunks(l, n):
     for i in range(0, len(l), n):
         yield l[i:i + n]
 
-def refresh_user_followers(create_new=False):
+
+def refresh_user_followers():
+    """
+    Update the tweet counters for all users, then select the most popular users
+    and update their counts
+    """
+    api = tweepy.API(auth_handler, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
+
+    all_users = User.fetch_users()
+    update_count = 0
+    print('[{}] Updating user counters..'.format(time.strftime('%c')))
+    for user in all_users:
+        update_count += 1
+        aggregation_result = Tweet.get_user_tweet_counts(user.id)
+        user.total_tweet_favourites = aggregation_result[0] or 0
+        user.total_tweet_retweets = aggregation_result[1] or 0
+        user.total_tweet_replies = aggregation_result[2] or 0
+        user.tweet_count = aggregation_result[3] or 0
+    User.save()  # We only commit the session once to speed things up
+
+    print('[{}] Done'.format(time.strftime('%c')))
+    print('[{}] Begin refreshing most popular users'.format(time.strftime('%c')))
+    top_users = User.get_highest_counter_users()
+    top_users = list(top_users)
+    top_users.reverse()
+    for user in top_users:
+        user_follower_ids = []
+        for page in tweepy.Cursor(api.followers_ids, user_id=user.id).pages():
+            user_follower_ids.extend(page)
+            print('[{}] Paginate... ({} followers)'.format(time.strftime('%c'), len(user_follower_ids)))
+        User.update_followers(user.id, user_follower_ids)
+        print('[{}] Updated followers for user: {}, followers: {}'.format(time.strftime('%c'), user.id, len(user_follower_ids)))
+    print('[{}] Update complete.'.format(time.strftime('%c')))
+
+def refresh_user_data(create_new=False):
     """
     Iterate through all our users, fetch their followers, and add any followers who
     are in the users table, in their list of followers
@@ -60,11 +94,14 @@ if __name__ == '__main__':
         fcntl.lockf (f, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except IOError as e:
         if e.errno == errno.EAGAIN:
-            sys.stderr.write('[{}] Script refresh_user_followers already running.\n'.format(time.strftime('%c')))
+            sys.stderr.write('[{}] Script refresh_user_data already running.\n'.format(time.strftime('%c')))
             sys.exit(-1)
         raise
     # Create new flag tells the script if it should scan the tweet table for new users
     create_new = True if 'create' in sys.argv else False
-
-    print('[{}] Start refresh_user_followers'.format(time.strftime('%c')))
-    refresh_user_followers(create_new)
+    if 'update_followers' in sys.argv:
+        print('[{}] Start refresh_user_followers'.format(time.strftime('%c')))
+        refresh_user_followers()
+    else:
+        print('[{}] Start refresh_user_data'.format(time.strftime('%c')))
+        refresh_user_data(create_new)
