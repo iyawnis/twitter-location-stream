@@ -138,7 +138,7 @@ class User(Base):
         return (User.query
             .order_by(User.total_tweet_favourites.desc(),
                 User.total_tweet_retweets.desc())
-            )
+            .limit(100))
 
     @classmethod
     def save(cls):
