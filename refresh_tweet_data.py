@@ -5,6 +5,7 @@ import time
 import fcntl
 import sys
 import errno
+from traceback import print_exc
 from auth import auth_handler
 from model import Tweet
 
