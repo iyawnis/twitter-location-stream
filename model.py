@@ -10,9 +10,9 @@ class Tweet(Base):
     coordinates = Column(String(100), nullable=True)
     created_at = Column(String(100), nullable=False)
     place = Column(String(100), nullable=False)
-    retweet_count = Column(Integer, nullable=True)
-    favorite_count = Column(Integer, nullable=True)
-    reply_count = Column(Integer, nullable=False, default=0)
+    retweet_count = Column(Integer, nullable=False, default=0, server_default='0')
+    favorite_count = Column(Integer, nullable=False, default=0, server_default='0')
+    reply_count = Column(Integer, nullable=False, default=0, server_default='0')
     last_update = Column(DateTime, nullable=True, index=True)
     json = Column(JSON, nullable=True)
 
@@ -26,8 +26,8 @@ class Tweet(Base):
             .limit(100))
 
     @classmethod
-    def fetch_distinct_users(cls):
-        return Tweet.query.distinct(Tweet.user_id)
+    def fetch_distinct_user_ids(cls):
+        return Tweet.query.distinct(Tweet.user_id).value(Tweet.user_id)
 
     @classmethod
     def get_user_tweet_counts(cls, user_id):
@@ -90,12 +90,12 @@ class User(Base):
     id = Column(BigInteger, primary_key=True)
     json = Column(JSON, nullable=True)
     follower_ids = Column(JSON, nullable=True)
-    follower_count = Column(Integer, nullable=False, default=0)
+    follower_count = Column(Integer, nullable=False, default=0, server_default='0')
     last_update = Column(DateTime, nullable=True, index=True)
-    total_tweet_favourites = Column(Integer, nullable=False, default=0)
+    total_tweet_favourites = Column(Integer, nullable=False, default=0, server_default='0')
     tweet_count = Column(Integer, nullable=False, default=0)
-    total_tweet_retweets = Column(Integer, nullable=False, default=0)
-    total_tweet_replies = Column(Integer, nullable=False, default=0)
+    total_tweet_retweets = Column(Integer, nullable=False, default=0, server_default='0')
+    total_tweet_replies = Column(Integer, nullable=False, default=0, server_default='0')
 
     @classmethod
     def update_data(cls, user_id, user_json):
@@ -118,6 +118,7 @@ class User(Base):
             dict(id=user_id)
             for user_id in user_ids
         ])
+        db_session.commit()
 
     @classmethod
     def update_followers(cls, user_id, follower_ids):
@@ -129,6 +130,30 @@ class User(Base):
                 'follower_ids': list(follower_ids),
                 'follower_count': len(follower_ids)
             }))
+
+    @classmethod
+    def update_user_counters(cls):
+        aggregated = (update_session
+            .query(
+                User.id.label("id"),
+                func.sum(Tweet.favorite_count).label("total_tweet_favourites"),
+                func.sum(Tweet.retweet_count).label("total_tweet_retweets"),
+                func.sum(Tweet.reply_count).label("total_tweet_replies"),
+                func.count(Tweet.id).label("tweet_count"))
+            .select_from(User)
+            .join(Tweet, Tweet.user_id == User.id)
+            .group_by(User.id)
+            .subquery()
+            .alias("aggregated"))
+        query = (User.__table__
+            .update()
+            .values(
+                total_tweet_favourites=aggregated.c.total_tweet_favourites,
+                total_tweet_retweets=aggregated.c.total_tweet_retweets,
+                total_tweet_replies=aggregated.c.total_tweet_replies,
+                tweet_count=aggregated.c.tweet_count)
+            .where(User.__table__.c.id == aggregated.c.id))
+        update_session.execute(query)
 
     @classmethod
     def get_highest_counter_users(cls):
@@ -145,11 +170,11 @@ class User(Base):
         db_session.commit()
 
     @classmethod
-    def fetch_users(cls):
+    def fetch_user_ids(cls):
         """
         Fetch all the users, ordered by the oldest updated first
         """
-        return User.query.order_by(User.last_update.asc()).all()
+        return [user[0] for user in db_session.execute("""SELECT users.id FROM users""")]
 
     def __repr__(self):
         return '<User {0}>'.format(self.id)

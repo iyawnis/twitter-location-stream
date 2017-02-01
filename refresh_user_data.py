@@ -14,7 +14,7 @@ def create_new_users(existing_ids):
     Find all unique users that have posted a tweet, and create an entry for them
     """
     print('[{}] Creating new users..'.format(time.strftime('%c')))
-    user_ids = [tweet.user_id for tweet in Tweet.fetch_distinct_users()]
+    user_ids = Tweet.fetch_distinct_user_ids()
     # Only create entires for users that dont already exist
     new_users = set(user_ids) - existing_ids
     User.batch_create(new_users)
@@ -33,17 +33,9 @@ def refresh_user_followers():
     """
     api = tweepy.API(auth_handler, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
 
-    all_users = User.fetch_users()
     update_count = 0
     print('[{}] Updating user counters..'.format(time.strftime('%c')))
-    for user in all_users:
-        update_count += 1
-        aggregation_result = Tweet.get_user_tweet_counts(user.id)
-        user.total_tweet_favourites = aggregation_result[0] or 0
-        user.total_tweet_retweets = aggregation_result[1] or 0
-        user.total_tweet_replies = aggregation_result[2] or 0
-        user.tweet_count = aggregation_result[3] or 0
-    User.save()  # We only commit the session once to speed things up
+    User.update_user_counters()
 
     print('[{}] Done'.format(time.strftime('%c')))
     print('[{}] Begin refreshing most popular users'.format(time.strftime('%c')))
@@ -66,13 +58,12 @@ def refresh_user_data(create_new=False):
     """
     start_time = time.time()
     update_count = 0
-    existing_ids = set([user.id for user in User.fetch_users()])
+    existing_ids = User.fetch_user_ids()
     if create_new:
         create_new_users(existing_ids)
     api = tweepy.API(auth_handler, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
-
     print('Updating User data...', end='')
-    for users_chunk in chunks(User.fetch_users(), 100):
+    for users_chunk in chunks(User.fetch_user_ids(), 100):
         try:
             response = api.lookup_users([user.id for user in users_chunk])
             print('.', end='', flush=True)
