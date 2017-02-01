@@ -16,7 +16,7 @@ def create_new_users(existing_ids):
     print('[{}] Creating new users..'.format(time.strftime('%c')))
     user_ids = Tweet.fetch_distinct_user_ids()
     # Only create entires for users that dont already exist
-    new_users = set(user_ids) - existing_ids
+    new_users = set(user_ids) - set(existing_ids)
     User.batch_create(new_users)
     print('[{}] Created {} users'.format(time.strftime('%c'), len(new_users)))
 
@@ -65,7 +65,7 @@ def refresh_user_data(create_new=False):
     print('Updating User data...', end='')
     for users_chunk in chunks(User.fetch_user_ids(), 100):
         try:
-            response = api.lookup_users([user.id for user in users_chunk])
+            response = api.lookup_users(users_chunk)
             print('.', end='', flush=True)
             for user_json in response:
                 update_count += 1
