@@ -114,8 +114,8 @@ class User(Base):
         Batch create new user objects, from a list of user_ids
         This offers better performance compaired to individual create
         """
-        update_session.bulk_save_objects([
-            User(id=user_id)
+        db_session.bulk_insert_mappings(User, [
+            dict(id=user_id)
             for user_id in user_ids
         ])
 

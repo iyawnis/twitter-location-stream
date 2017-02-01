@@ -13,12 +13,12 @@ def create_new_users(existing_ids):
     """
     Find all unique users that have posted a tweet, and create an entry for them
     """
-    print('Creating new users..')
+    print('[{}] Creating new users..'.format(time.strftime('%c')))
     user_ids = [tweet.user_id for tweet in Tweet.fetch_distinct_users()]
     # Only create entires for users that dont already exist
     new_users = set(user_ids) - existing_ids
     User.batch_create(new_users)
-    print('Created {} users'.format(len(new_users)))
+    print('[{}] Created {} users'.format(time.strftime('%c'), len(new_users)))
 
 def chunks(l, n):
     """Yield successive n-sized chunks from l."""
