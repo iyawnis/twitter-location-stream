@@ -27,7 +27,7 @@ class Tweet(Base):
 
     @classmethod
     def fetch_distinct_user_ids(cls):
-        return Tweet.query.distinct(Tweet.user_id).value(Tweet.user_id)
+        return [str(user_id[0]) for user_id in db_session.query(Tweet.user_id).distinct(Tweet.user_id)]
 
     @classmethod
     def get_user_tweet_counts(cls, user_id):
@@ -174,7 +174,7 @@ class User(Base):
         """
         Fetch all the users, ordered by the oldest updated first
         """
-        return [user[0] for user in db_session.execute("""SELECT users.id FROM users""")]
+        return [str(user_id[0]) for user_id in db_session.query(User.id)]
 
     def __repr__(self):
         return '<User {0}>'.format(self.id)

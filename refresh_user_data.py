@@ -15,6 +15,7 @@ def create_new_users(existing_ids):
     """
     print('[{}] Creating new users..'.format(time.strftime('%c')))
     user_ids = Tweet.fetch_distinct_user_ids()
+
     # Only create entires for users that dont already exist
     new_users = set(user_ids) - set(existing_ids)
     User.batch_create(new_users)
@@ -61,6 +62,7 @@ def refresh_user_data(create_new=False):
     existing_ids = User.fetch_user_ids()
     if create_new:
         create_new_users(existing_ids)
+
     api = tweepy.API(auth_handler, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
     print('Updating User data...', end='')
     for users_chunk in chunks(User.fetch_user_ids(), 100):
