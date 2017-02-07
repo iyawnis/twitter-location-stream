@@ -128,7 +128,8 @@ class User(Base):
         (update_session.query(User)
             .filter(User.id == user_id).update({
                 'follower_ids': list(follower_ids),
-                'follower_count': len(follower_ids)
+                'follower_count': len(follower_ids),
+                'last_update': datetime.now()
             }))
 
     @classmethod

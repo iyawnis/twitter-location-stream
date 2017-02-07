@@ -8,6 +8,8 @@ import errno
 from traceback import print_exc
 from auth import auth_handler
 from model import Tweet, User
+from datetime import datetime
+
 
 def create_new_users(existing_ids):
     """
@@ -41,14 +43,18 @@ def refresh_user_followers():
     print('[{}] Done'.format(time.strftime('%c')))
     print('[{}] Begin refreshing most popular users'.format(time.strftime('%c')))
     top_users = User.get_highest_counter_users()
-    top_users = list(top_users)
-    top_users.reverse()
+    top_users = sorted(top_users, key=lambda user: user.last_update or datetime(1970, 1, 1))
     for user in top_users:
         user_follower_ids = []
-        for page in tweepy.Cursor(api.followers_ids, user_id=user.id).pages():
-            user_follower_ids.extend(page)
-            print('[{}] Paginate... ({} followers)'.format(time.strftime('%c'), len(user_follower_ids)))
-        User.update_followers(user.id, user_follower_ids)
+        try:
+            for page in tweepy.Cursor(api.followers_ids, user_id=user.id).pages():
+                time.sleep(5)
+                print('[{}] Paginate... ({} followers)'.format(time.strftime('%c'), len(user_follower_ids)))
+                user_follower_ids.extend(page)
+                User.update_followers(user.id, user_follower_ids)
+        except Exception:
+            print_exc()
+            time.sleep(30)
         print('[{}] Updated followers for user: {}, followers: {}'.format(time.strftime('%c'), user.id, len(user_follower_ids)))
     print('[{}] Update complete.'.format(time.strftime('%c')))
 
