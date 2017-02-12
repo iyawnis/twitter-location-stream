@@ -24,7 +24,8 @@ def refresh_tweet_replies():
     Go through all Tweets in the database, and if one is a reply to
     existing tweet in the DB, increment its reply count
     """
-    for tweet in Tweet.all_with_json():
+    for tweet_id in Tweet.all_with_json():
+        tweet = Tweet.query.get(tweet_id)
         reply_to = tweet.json.get('in_reply_to_status_id')
         if reply_to is not None:
             Tweet.increment_replies(reply_to)
@@ -83,6 +84,7 @@ if __name__ == '__main__':
     if 'local' in sys.argv:
         print('[{}] Start refresh_tweet_replies'.format(time.strftime('%c')))
         refresh_tweet_replies()
+        print('[{}] Complete refresh_tweet_replies'.format(time.strftime('%c')))
     else:
         print('[{}] Start refresh_tweet_data'.format(time.strftime('%c')))
         refresh_tweet_data()

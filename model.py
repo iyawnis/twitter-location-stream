@@ -76,7 +76,7 @@ class Tweet(Base):
         """
         Retrieve all Tweets that have a value for their json field
         """
-        return Tweet.query.filter(Tweet.json != None)
+        return update_session.query(Tweet.id).filter(Tweet.json != None)
 
     def save(self):
         db_session.add(self)
